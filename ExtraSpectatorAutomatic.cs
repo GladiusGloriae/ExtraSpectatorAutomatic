@@ -57,7 +57,7 @@ private int disable_spectators_PlayerCount;
 private int spectator_PortsCount;
 private int playerCount;
 private int maxPlayerCount;
-
+private bool isSectatorEnabled = true;
 
 
 
@@ -150,7 +150,7 @@ public string GetPluginName() {
 }
 
 public string GetPluginVersion() {
-	return "0.0.0.1";
+	return "1.0.0.0";
 }
 
 public string GetPluginAuthor() {
@@ -158,30 +158,74 @@ public string GetPluginAuthor() {
 }
 
 public string GetPluginWebsite() {
-	return "www.gladiusgloriae.de";
+    return "github.com/GladiusGloriae/ExtraSpectatorAutomatic.git";
 }
 
 public string GetPluginDescription() {
 	return @"
-<h1>THIS PLUGIN IS NOT READY FOR USE YET!</h1>
-<p>TBD</p>
+
+If you find this plugin useful, please consider supporting me. Donations help support the servers used for development and provide incentive for additional features and new plugins! Any amount would be appreciated!</p>
+
+<center>
+<form action=""https://www.paypal.com/cgi-bin/webscr"" method=""post"" target=""_blank"">
+<input type=""hidden"" name=""cmd"" value=""_s-xclick"">
+<input type=""hidden"" name=""hosted_button_id"" value=""4VYFL94U9ME8L"">
+<input type=""image"" src=""https://www.paypalobjects.com/en_US/i/btn/btn_donate_LG.gif"" border=""0"" name=""submit"" alt=""PayPal - The safer, easier way to pay online!"">
+<img alt="""" border=""0"" src=""https://www.paypalobjects.com/de_DE/i/scr/pixel.gif"" width=""1"" height=""1"">
+</form>
+</center>
+
 
 <h2>Description</h2>
-<p>TBD</p>
+<p>This Plugin Enables or Disables Spectator Ports based on Player Count</p>
 
 <h2>Commands</h2>
-<p>TBD</p>
+<p>This Plugin has no Commands</p>
 
 <h2>Settings</h2>
-<p>TBD</p>
+<p>
+<blockquote><h4>Enable Spectators Player Count</h4>
+On how many or less Players should Spectator Ports get activated<br/>
+</blockquote>
+<blockquote><h4>Disable Spectators Player Count</h4>
+On how many or more Players should Spectator Ports get deactivated<br/>
+</blockquote>
+<blockquote><h4>Spectator Ports Count</h4>
+Set the Count of Spectator Ports<br/>
+</blockquote>
+<blockquote><h4>Debug level</h4>
+Set the Debug level. Default is 2<br/>
+</blockquote>
 
-<h2>Development</h2>
-<p>TBD</p>
+
+
+</p>
+
 <h3>Changelog</h3>
-<blockquote><h4>0.0.0.1 (23-02-2014)</h4>
+<blockquote><h4>1.0.0.0 (24-02-2014)</h4>
 	- initial version<br/>
 </blockquote>
 ";
+}
+
+
+
+
+private void EnableSpectators()
+{
+    if (!isSectatorEnabled) WritePluginConsole("Enable Spectators", "INFO", 2);
+    isSectatorEnabled = true;
+    if (allow_public_spectators == enumBoolYesNo.Yes) ServerCommand("vars.alwaysAllowSpectators", "true");
+    ServerCommand("vars.maxSpectators", spectator_PortsCount.ToString() );
+}
+
+
+private void DisableSpectators()
+{
+    if (isSectatorEnabled) WritePluginConsole("Disable Spectators", "INFO", 2);
+    isSectatorEnabled = false;
+    ServerCommand("vars.alwaysAllowSpectators", "false");
+    ServerCommand("vars.maxSpectators", "0");
 }
 
 
@@ -194,8 +238,8 @@ public List<CPluginVariable> GetDisplayPluginVariables() {
 	lstReturn.Add(new CPluginVariable("Special|Debug level", DebugLevel.GetType(), DebugLevel));
 
 
-    lstReturn.Add(new CPluginVariable("General|Force Spectator Ports", typeof(enumBoolYesNo), force_spectators));
-    lstReturn.Add(new CPluginVariable("General|Allow Public Spectators", typeof(enumBoolYesNo), allow_public_spectators));
+  //  lstReturn.Add(new CPluginVariable("General|Force Spectator Ports", typeof(enumBoolYesNo), force_spectators));
+  // lstReturn.Add(new CPluginVariable("General|Allow Public Spectators", typeof(enumBoolYesNo), allow_public_spectators));
     lstReturn.Add(new CPluginVariable("General|Enable Spectators Player Count", typeof(int), enable_spectators_PlayerCount));
     lstReturn.Add(new CPluginVariable("General|Disable Spectators Player Count", typeof(int), disable_spectators_PlayerCount));
     lstReturn.Add(new CPluginVariable("General|Spectator Ports Count", typeof(int), spectator_PortsCount));
@@ -209,16 +253,60 @@ public List<CPluginVariable> GetPluginVariables() {
 }
 
 public void SetPluginVariable(string strVariable, string strValue) {
-	if (Regex.Match(strVariable, @"Debug level").Success) {
-		int tmp = 2;
+
+    if (Regex.Match(strVariable, @"Allow Public Spectators").Success)
+    {
+        enumBoolYesNo tmp = enumBoolYesNo.Yes;
+
+        if (strValue == "No") tmp = enumBoolYesNo.No;
+        allow_public_spectators = tmp;
+        
+    }
+
+
+
+    
+    if (Regex.Match(strVariable, @"Enable Spectators Player Count").Success)
+    {
+        
+        int tmp = 15;
 		int.TryParse(strValue, out tmp);
-		DebugLevel = tmp;
-	}
+        enable_spectators_PlayerCount = tmp;
+                
+    }
+
+    if (Regex.Match(strVariable, @"Disable Spectators Player Count").Success)
+    {
+
+        int tmp = 20;
+        int.TryParse(strValue, out tmp);
+        disable_spectators_PlayerCount = tmp;
+
+    }
+
+    if (Regex.Match(strVariable, @"Spectator Ports Count").Success)
+    {
+        
+        int tmp = 2;
+        int.TryParse(strValue, out tmp);
+        spectator_PortsCount = tmp;
+
+    }
+
+    if (Regex.Match(strVariable, @"Debug level").Success)
+    {
+        int tmp = 2;
+        int.TryParse(strValue, out tmp);
+        DebugLevel = tmp;
+    }
+
+
 }
 
 
 public void OnPluginLoaded(string strHostName, string strPort, string strPRoConVersion) {
-	this.RegisterEvents(this.GetType().Name, "OnVersion", "OnServerInfo", "OnResponseError", "OnListPlayers", "OnPlayerJoin", "OnPlayerLeft", "OnPlayerKilled", "OnPlayerSpawned", "OnPlayerTeamChange", "OnGlobalChat", "OnTeamChat", "OnSquadChat", "OnRoundOverPlayers", "OnRoundOver", "OnRoundOverTeamScores", "OnLoadingLevel", "OnLevelStarted", "OnLevelLoaded");
+    this.RegisterEvents(this.GetType().Name, "OnServerInfo");
+    //this.RegisterEvents(this.GetType().Name, "OnVersion", "OnServerInfo", "OnResponseError", "OnListPlayers", "OnPlayerJoin", "OnPlayerLeft", "OnPlayerKilled", "OnPlayerSpawned", "OnPlayerTeamChange", "OnGlobalChat", "OnTeamChat", "OnSquadChat", "OnRoundOverPlayers", "OnRoundOver", "OnRoundOverTeamScores", "OnLoadingLevel", "OnLevelStarted", "OnLevelLoaded");
 }
 
 public void OnPluginEnable() {
@@ -232,46 +320,51 @@ public void OnPluginDisable() {
 }
 
 
-public override void OnVersion(string serverType, string version) { }
-
 public override void OnServerInfo(CServerInfo serverInfo) {
     
     playerCount = serverInfo.PlayerCount;
     maxPlayerCount = serverInfo.MaxPlayerCount;
 
+    if (isPluginEnabled)
+    {
+        if (playerCount >= disable_spectators_PlayerCount) DisableSpectators();
+        if (playerCount <= enable_spectators_PlayerCount) EnableSpectators();
+    }
 }
 
-public override void OnResponseError(List<string> requestWords, string error) { }
+//public override void OnVersion(string serverType, string version) { }
 
-public override void OnListPlayers(List<CPlayerInfo> players, CPlayerSubset subset) { }
+//public override void OnResponseError(List<string> requestWords, string error) { }
 
-public override void OnPlayerJoin(string soldierName) { }
+//public override void OnListPlayers(List<CPlayerInfo> players, CPlayerSubset subset) { }
 
-public override void OnPlayerLeft(CPlayerInfo playerInfo) { }
+//public override void OnPlayerJoin(string soldierName) { }
 
-public override void OnPlayerKilled(Kill kKillerVictimDetails) { }
+//public override void OnPlayerLeft(CPlayerInfo playerInfo) { }
 
-public override void OnPlayerSpawned(string soldierName, Inventory spawnedInventory) { }
+//public override void OnPlayerKilled(Kill kKillerVictimDetails) { }
 
-public override void OnPlayerTeamChange(string soldierName, int teamId, int squadId) { }
+//public override void OnPlayerSpawned(string soldierName, Inventory spawnedInventory) { }
 
-public override void OnGlobalChat(string speaker, string message) { }
+//public override void OnPlayerTeamChange(string soldierName, int teamId, int squadId) { }
 
-public override void OnTeamChat(string speaker, string message, int teamId) { }
+//public override void OnGlobalChat(string speaker, string message) { }
 
-public override void OnSquadChat(string speaker, string message, int teamId, int squadId) { }
+//public override void OnTeamChat(string speaker, string message, int teamId) { }
 
-public override void OnRoundOverPlayers(List<CPlayerInfo> players) { }
+//public override void OnSquadChat(string speaker, string message, int teamId, int squadId) { }
 
-public override void OnRoundOverTeamScores(List<TeamScore> teamScores) { }
+//public override void OnRoundOverPlayers(List<CPlayerInfo> players) { }
 
-public override void OnRoundOver(int winningTeamId) { }
+//public override void OnRoundOverTeamScores(List<TeamScore> teamScores) { }
 
-public override void OnLoadingLevel(string mapFileName, int roundsPlayed, int roundsTotal) { }
+//public override void OnRoundOver(int winningTeamId) { }
 
-public override void OnLevelStarted() { }
+//public override void OnLoadingLevel(string mapFileName, int roundsPlayed, int roundsTotal) { }
 
-public override void OnLevelLoaded(string mapFileName, string Gamemode, int roundsPlayed, int roundsTotal) { } // BF3
+//public override void OnLevelStarted() { }
+
+//public override void OnLevelLoaded(string mapFileName, string Gamemode, int roundsPlayed, int roundsTotal) { } // BF3
 
 
 } // end ExtraSpectatorAutomatic
