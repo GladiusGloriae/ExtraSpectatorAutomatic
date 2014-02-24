@@ -1,0 +1,1 @@
+To install this Plugin, put the ExtraSpectatorAutomatic.cs into your Plugins/BF4 Folder
