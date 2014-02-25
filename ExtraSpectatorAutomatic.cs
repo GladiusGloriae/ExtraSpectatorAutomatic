@@ -1,4 +1,4 @@
-/* ExtraSpectatorAutomatic.cs
+﻿/* ExtraSpectatorAutomatic.cs
  
  * Copyright 2014 by Schwitz Markus ( MarkusSR1984 ) schwitz@sossau.com
  *
@@ -118,7 +118,7 @@ public void WritePluginConsole(string message, string tag, int level)
 
         //if (this.fDebugLevel >= 3) // WRITE LOG FILE
         //{
-        //    files.DebugWrite(LogFileName, Regex.Replace("[" + DateTime.Now + "]" + line, "[/^][0-9bni]", "")); // L�sche formatierung und schreibe in Logdatei
+        //    files.DebugWrite(LogFileName, Regex.Replace("[" + DateTime.Now + "]" + line, "[/^][0-9bni]", "")); // Lösche formatierung und schreibe in Logdatei
         //}
 
 
