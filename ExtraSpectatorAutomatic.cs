@@ -59,6 +59,11 @@ private int playerCount;
 private int maxPlayerCount;
 private bool isSectatorEnabled = true;
 
+private Hashtable PluginInfo = new Hashtable();
+private bool isRegisteredInTaskPlaner = false;
+private List<string> Commands = new List<string>();
+private List<string> Variables = new List<string>();
+
 
 
 
@@ -202,6 +207,10 @@ Set the Debug level. Default is 2<br/>
 </p>
 
 <h3>Changelog</h3>
+<blockquote><h4>1.0.0.1 (13-04-2014)</h4>
+	- Added Support for Extra Task Manager<br/>
+</blockquote>
+
 <blockquote><h4>1.0.0.0 (24-02-2014)</h4>
 	- initial version<br/>
 </blockquote>
@@ -228,6 +237,69 @@ private void DisableSpectators()
     ServerCommand("vars.maxSpectators", "0");
 }
 
+public bool IsExtraTaskPlanerInstalled()
+{
+    List<MatchCommand> registered = this.GetRegisteredCommands();
+    foreach (MatchCommand command in registered)
+    {
+        if (command.RegisteredClassname.CompareTo("ExtraTaskPlaner") == 0 && command.RegisteredMethodName.CompareTo("PluginInterface") == 0)
+        {
+            WritePluginConsole("^bExtra Task Planer^n detected", "INFO", 3);
+            return true;
+        }
+
+    }
+
+    return false;
+}
+
+public void ExtraTaskPlaner_Callback(string command)
+{
+
+    if (command == "success")
+    {
+        isRegisteredInTaskPlaner = true;
+    }
+
+    
+}
+
+
+private string GetCurrentClassName()
+{
+    string tmpClassName;
+
+    tmpClassName = this.GetType().ToString(); // Get Current Classname String
+    tmpClassName = tmpClassName.Replace("PRoConEvents.", "");
+
+
+    return tmpClassName;
+
+}
+
+
+private void SendTaskPlanerInfo()
+{
+
+
+
+    Variables.Add("Enable Spectators Player Count");
+    Variables.Add("Disable Spectators Player Count");
+    Variables.Add("Spectator Ports Count");
+
+
+
+
+    PluginInfo["PluginName"] = GetPluginName();
+    PluginInfo["PluginVersion"] = GetPluginVersion();
+    PluginInfo["PluginClassname"] = GetCurrentClassName();
+
+    PluginInfo["PluginCommands"] = CPluginVariable.EncodeStringArray(Commands.ToArray());
+    PluginInfo["PluginVariables"] = CPluginVariable.EncodeStringArray(Variables.ToArray());
+
+    this.ExecuteCommand("procon.protected.plugins.setVariable", "ExtraTaskPlaner", "RegisterPlugin", JSON.JsonEncode(PluginInfo)); // Send Plugin Infos to Task Planer
+
+}
 
 
 
@@ -254,6 +326,14 @@ public List<CPluginVariable> GetPluginVariables() {
 
 public void SetPluginVariable(string strVariable, string strValue) {
 
+    if (Regex.Match(strVariable, @"ExtraTaskPlaner_Callback").Success)
+    {
+        ExtraTaskPlaner_Callback(strValue);
+    }
+
+    
+    
+    
     if (Regex.Match(strVariable, @"Allow Public Spectators").Success)
     {
         enumBoolYesNo tmp = enumBoolYesNo.Yes;
@@ -306,6 +386,25 @@ public void SetPluginVariable(string strVariable, string strValue) {
 
 public void OnPluginLoaded(string strHostName, string strPort, string strPRoConVersion) {
     this.RegisterEvents(this.GetType().Name, "OnServerInfo");
+    
+    Thread startup_sleep = new Thread(new ThreadStart(delegate()
+    {
+        Thread.Sleep(2000);
+        if (IsExtraTaskPlanerInstalled())
+        {
+            do
+            {
+                SendTaskPlanerInfo();
+                Thread.Sleep(2000);
+            }
+            while (!isRegisteredInTaskPlaner);
+        }
+    }));
+    startup_sleep.Start();   
+
+
+
+
     //this.RegisterEvents(this.GetType().Name, "OnVersion", "OnServerInfo", "OnResponseError", "OnListPlayers", "OnPlayerJoin", "OnPlayerLeft", "OnPlayerKilled", "OnPlayerSpawned", "OnPlayerTeamChange", "OnGlobalChat", "OnTeamChat", "OnSquadChat", "OnRoundOverPlayers", "OnRoundOver", "OnRoundOverTeamScores", "OnLoadingLevel", "OnLevelStarted", "OnLevelLoaded");
 }
 
